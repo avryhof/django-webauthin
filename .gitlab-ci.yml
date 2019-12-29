@@ -17,7 +17,7 @@ test:
     - source venv/bin/activate
     - python setup.py install
   script:
-    - pre-commit run -a
+    - pre-commit run -a -hook-stage manual
   stage: test
   cache:
     paths:
