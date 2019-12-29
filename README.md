@@ -3,10 +3,6 @@
 
 WARNING: This library is still somewhat of an alpha version, though it should mostly work.
 
-There is currently a problem when installing, since the library depends on a pre-release
-version of [py-webauthn](https://github.com/duo-labs/py_webauthn). For now, you will
-need to install the latest HEAD from that repo.
-
 
 About
 -----
