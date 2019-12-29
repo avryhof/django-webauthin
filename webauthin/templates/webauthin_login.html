@@ -217,15 +217,7 @@
 
         const transformedAssertionForServer = transformAssertionForServer(assertion);
 
-        let response;
-        try {
-            response = await postAssertionToServer(transformedAssertionForServer);
-        } catch (err) {
-            alert("Error when validating assertion on server:" + err);
-            return console.error("Error when validating assertion on server:", err);
-        }
-
-        window.location.reload();
+        postAssertionToServer(transformedAssertionForServer);
     };
 
     /**
@@ -255,16 +247,23 @@
     * @param {Object} assertionDataForServer
     */
     const postAssertionToServer = async (assertionDataForServer) => {
-        const formData = new FormData();
+
+        var form = document.createElement("form");
+        form.method = "POST";
+        form.action = "{% url "webauthin:login-verify" %}";   
+        form.style  = "display:none;"
+
         Object.entries(assertionDataForServer).forEach(([key, value]) => {
-            formData.set(key, value);
+            var element = document.createElement("input"); 
+            element.value=value;
+            element.name=key;
+            element.type="hidden";
+            form.appendChild(element);  
         });
 
-        return await fetch_json(
-        "{% url "webauthin:login-verify" %}", {
-            method: "POST",
-            body: formData
-        });
+        document.body.appendChild(form);
+    
+        form.submit();
     }
 
 

@@ -195,16 +195,7 @@
 
         // post the transformed credential data to the server for validation
         // and storing the public key
-        let assertionValidationResponse;
-        try {
-            assertionValidationResponse = await postNewAssertionToServer(newAssertionForServer);
-        } catch (err) {
-            alert("Server validation of credential failed:" + err);
-            return console.error("Server validation of credential failed:", err);
-        }
-
-        // reload the page after a successful result
-        window.location.reload();
+        postNewAssertionToServer(newAssertionForServer);
     }
 
     /**
@@ -277,16 +268,23 @@
     * @param {Object} credentialDataForServer
     */
     const postNewAssertionToServer = async (credentialDataForServer) => {
-        const formData = new FormData();
+
+        var form = document.createElement("form");
+        form.method = "POST";
+        form.action = "{% url "webauthin:register-verify" %}";   
+        form.style  = "display:none;"
+
         Object.entries(credentialDataForServer).forEach(([key, value]) => {
-            formData.set(key, value);
+            var element = document.createElement("input"); 
+            element.value=value;
+            element.name=key;
+            element.type="hidden";
+            form.appendChild(element);  
         });
 
-        return await fetch_json(
-        "{% url "webauthin:register-verify" %}", {
-            method: "POST",
-            body: formData
-        });
+        document.body.appendChild(form);
+    
+        form.submit();
     }
 
     document.addEventListener("DOMContentLoaded", e => {
