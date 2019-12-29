@@ -2,6 +2,14 @@ Changelog
 =========
 
 
+%%version%% (unreleased)
+------------------------
+
+Fixes
+~~~~~
+- Upgrade to setuptools. [Stavros Korokithakis]
+
+
 v0.0.2 (2019-12-29)
 -------------------
 
