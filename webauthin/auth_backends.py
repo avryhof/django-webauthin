@@ -2,8 +2,8 @@ import base64
 
 import webauthn
 from django.contrib.auth import get_user_model
-
 from django.contrib.sites.shortcuts import get_current_site
+
 from .models import AuthData
 
 ICON = "https://example.com/"
@@ -20,7 +20,7 @@ class WebAuthinBackend:
 
     def authenticate(self, request, credential_id, data=None):
         """Authenticate a user given a signed token."""
-        challenge = request.session.get('challenge')
+        challenge = request.session.get("challenge")
         if not challenge:
             return None
 

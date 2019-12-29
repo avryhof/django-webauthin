@@ -1,0 +1,24 @@
+image: python:3.7
+
+stages:
+  - test
+
+test:
+  variables:
+    PRE_COMMIT_HOME: "$CI_PROJECT_DIR/.cache/pre-commit"
+    PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  cache:
+    key: pre-commit
+    paths:
+      - .cache/pre-commit
+  before_script:
+    - pip install virtualenv pre-commit
+    - virtualenv venv
+    - source venv/bin/activate
+    - python setup.py install
+  script:
+    - pre-commit run -a
+  stage: test
+  cache:
+    paths:
+      - .cache/pip

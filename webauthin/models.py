@@ -14,7 +14,7 @@ class AuthData(models.Model):
     class Meta:
         verbose_name_plural = "auth data"
 
-    def set_sign_count(self, sign_count: int)->None:
+    def set_sign_count(self, sign_count: int) -> None:
         """Set the sign_count and update the last_used_on datetime."""
         self.sign_count = sign_count
         self.last_used_on = now()
