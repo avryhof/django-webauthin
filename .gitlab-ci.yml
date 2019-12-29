@@ -12,7 +12,7 @@ test:
     paths:
       - .cache/pre-commit
   before_script:
-    - pip install virtualenv pre-commit
+    - pip install virtualenv pre-commit gitchangelog
     - virtualenv venv
     - source venv/bin/activate
     - python setup.py install

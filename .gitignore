@@ -3,6 +3,7 @@ dist/
 *.log
 *.pot
 *.pyc
+.mypy_cache
 .coverage
 .tox
 *.egg
