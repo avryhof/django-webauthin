@@ -126,12 +126,12 @@ def login_begin(request):
 def login_verify(request):
     challenge = request.session.get("challenge")
     if not challenge:
-        return JsonResponse("No challenge exists in your session.", status=422)
-
-    print(request.POST)
+        messages.error(request, "No challenge exists for your session.")
+        return JsonResponse("No challenge exists for your session.", status=422)
 
     user = authenticate(request, credential_id=request.POST["id"], data=request.POST)
     if user is None:
+        messages.error(request, "There was an error while validating your credentials.")
         return JsonResponse({"fail": "Assertion failed."}, status=422)
 
     login(request, user)

@@ -170,8 +170,8 @@
         try {
             credentialCreateOptionsFromServer = await getCredentialCreateOptionsFromServer();
         } catch (err) {
-            alert("Failed to generate credential request options:" + credentialCreateOptionsFromServer)
-            return console.error("Failed to generate credential request options:", credentialCreateOptionsFromServer)
+            alert("Failed to register key, please make sure your browser supports WebAuthn: " + credentialCreateOptionsFromServer)
+            return console.error("Failed to register key, please make sure your browser supports WebAuthn: ", credentialCreateOptionsFromServer)
         }
 
         // convert certain members of the PublicKeyCredentialCreateOptions into
