@@ -20,7 +20,9 @@ setup(
     keywords="django",
     zip_safe=False,
     include_package_data=True,
-    install_requires=["webauthn"],
+    install_requires=[
+        "webauthn @ https://github.com/duo-labs/py_webauthn/archive/a48ab13c06ad2c44cdf226cc6b8483d45b350691.zip#egg=webauthn"
+    ],
     packages=find_packages(),
     python_requires=">=3.6",
 )
