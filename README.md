@@ -92,3 +92,21 @@ def account_view(request):
 </p>
 {% endfor %}
 ```
+
+Do note that you need to have the Django messages framework installed so the library
+can show the user error/success messages.
+
+
+Settings
+--------
+
+Here are the settings you can change in your `settings.py`:
+
+* `WEBAUTHIN_LOGIN_REDIRECT_URL` (default: LOGIN_REDIRECT_URL): Where to redirect after
+  a successful login.
+* `WEBAUTHIN_LOGIN_ERROR_URL` (default: LOGIN_URL): Where to redirect after a login
+  error.
+* `WEBAUTHIN_REGISTRATION_REDIRECT_URL` (default: LOGIN_REDIRECT_URL): Where to
+  redirect after a successful key registration.
+* `WEBAUTHIN_REGISTRATION_ERROR_URL` (default: LOGIN_REDIRECT_URL): Where to redirect
+  after a key registration error.
