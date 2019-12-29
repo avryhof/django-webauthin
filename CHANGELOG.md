@@ -7,6 +7,7 @@ Changelog
 
 Fixes
 ~~~~~
+- Try to fix dependencies again. [Stavros Korokithakis]
 - Upgrade to setuptools. [Stavros Korokithakis]
 
 
