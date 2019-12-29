@@ -1,6 +1,8 @@
 ﻿WebAuthin'
 ==========
 
+WARNING: This library is still somewhat of an alpha version, though it should mostly work.
+
 About
 -----
 
