@@ -170,6 +170,7 @@
         try {
             credentialCreateOptionsFromServer = await getCredentialCreateOptionsFromServer();
         } catch (err) {
+            alert("Failed to generate credential request options:" + credentialCreateOptionsFromServer)
             return console.error("Failed to generate credential request options:", credentialCreateOptionsFromServer)
         }
 
@@ -184,6 +185,7 @@
                 publicKey: publicKeyCredentialCreateOptions
             });
         } catch (err) {
+            alert("Error creating credential:" + err);
             return console.error("Error creating credential:", err);
         }
 
@@ -197,6 +199,7 @@
         try {
             assertionValidationResponse = await postNewAssertionToServer(newAssertionForServer);
         } catch (err) {
+            alert("Server validation of credential failed:" + err);
             return console.error("Server validation of credential failed:", err);
         }
 
