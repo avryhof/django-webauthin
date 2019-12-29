@@ -4,8 +4,7 @@ import sys
 from webauthin import __version__
 
 assert sys.version >= "3.6", "Requires Python v2.7 or above."
-from distutils.core import setup  # noqa
-from setuptools import find_packages  # noqa
+from setuptools import setup, find_packages  # noqa
 
 setup(
     name="django-webauthin",
