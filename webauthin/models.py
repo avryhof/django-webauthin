@@ -5,7 +5,7 @@ from django.utils.timezone import now
 
 class AuthData(models.Model):
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
-    friendly_name = models.CharField(
+    name = models.CharField(
         max_length=200, blank=True, help_text="The user-friendly name for this key."
     )
     credential_id = models.CharField(max_length=300, unique=True)

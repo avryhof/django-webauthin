@@ -81,18 +81,26 @@ Pressing this button will trigger the key registration flow.
 * You can also add a table to allow the user to see and delete their registered keys,
   though this process is currently somewhat manual:
 
-```python
-def account_view(request):
-    return render(request, "account.html", {"keys": request.user.authdata_set.all()}
-```
-
 ```html
-{% for key in keys %}
+{% for key in request.user.authdata_set.all %}
 <p>
-    Created on {{ key.created_on }} and last used on {{ key.last_used_on }}.
+    {{ key.name }}: Created on {{ key.created_on }} and last used on
+    {{ key.last_used_on }}.
+
+    <form
+        method="POST"
+        action="{% url "webauthin:delete-key" %}"
+        onsubmit="return confirm('Are you sure you want to delete this key?');"
+    >{% csrf_token %}
+        <input type="hidden" name="key_id" value="{{ key.id }}" />
+        <button type="submit">Delete</button>
+    </form>
 </p>
 {% endfor %}
 ```
+
+You can similarly change the key name by POSTing to `webauthin:rename-key` with a
+parameter called `name`.
 
 Do note that you need to have the Django messages framework installed so the library
 can show the user error/success messages.

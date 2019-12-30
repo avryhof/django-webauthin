@@ -140,3 +140,26 @@ def login_verify(request):
 
     messages.success(request, "You have been successfully logged in.")
     return redirect(wa_settings.LOGIN_REDIRECT_URL)
+
+
+@login_required
+def rename_key(request):
+    key = AuthData.objects.filter(pk=request.POST["key_id"]).first()
+    if not key or key.user != request.user:
+        messages.error(request, "That key does not exist.")
+    else:
+        key.name = request.POST["name"]
+        key.save()
+        messages.success(request, "The key has been renamed.")
+    return redirect(wa_settings.REGISTRATION_REDIRECT_URL)
+
+
+@login_required
+def delete_key(request):
+    key = AuthData.objects.filter(pk=request.POST["key_id"]).first()
+    if not key or key.user != request.user:
+        messages.error(request, "That key does not exist.")
+    else:
+        key.delete()
+        messages.success(request, "The key has been deleted.")
+    return redirect(wa_settings.REGISTRATION_REDIRECT_URL)

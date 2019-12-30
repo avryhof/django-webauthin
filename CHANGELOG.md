@@ -2,6 +2,14 @@ Changelog
 =========
 
 
+v0.0.3 (2019-12-29)
+-------------------
+
+Fixes
+~~~~~
+- Use transitional package. [Stavros Korokithakis]
+
+
 v0.0.2 (2019-12-29)
 -------------------
 
