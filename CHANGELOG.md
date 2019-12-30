@@ -2,6 +2,14 @@ Changelog
 =========
 
 
+%%version%% (unreleased)
+------------------------
+
+Features
+~~~~~~~~
+- Add key deletion and rename view. [Stavros Korokithakis]
+
+
 v0.0.3 (2019-12-29)
 -------------------
 
