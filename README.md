@@ -119,3 +119,11 @@ Here are the settings you can change in your `settings.py`:
   redirect after a successful key registration.
 * `WEBAUTHIN_REGISTRATION_ERROR_URL` (default: LOGIN_REDIRECT_URL): Where to redirect
   after a key registration error.
+
+
+Demo
+----
+
+You can see a demo of the flow by visiting [Pastery](https://www.pastery.net). Create
+an account by logging in with your email address, go to your account to register your
+key, then log out and log back in with your key.
