@@ -16,8 +16,7 @@ class Migration(migrations.Migration):
             model_name="authdata",
             name="created_on",
             field=models.DateTimeField(
-                auto_now_add=True,
-                default=datetime.datetime(2019, 12, 28, 17, 50, 48, 20406, tzinfo=utc),
+                auto_now_add=True, default=datetime.datetime.now()
             ),
             preserve_default=False,
         ),
