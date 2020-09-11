@@ -211,8 +211,8 @@
                 publicKey: transformedCredentialRequestOptions,
             });
         } catch (err) {
-            alert("Error when creating credential:" + err);
-            return console.error("Error when creating credential:", err);
+            alert("Error when creating credential: " + err);
+            return console.error("Error when creating credential: ", err);
         }
 
         const transformedAssertionForServer = transformAssertionForServer(assertion);
@@ -250,19 +250,19 @@
 
         var form = document.createElement("form");
         form.method = "POST";
-        form.action = "{% url "webauthin:login-verify" %}";   
+        form.action = "{% url "webauthin:login-verify" %}";
         form.style  = "display:none;"
 
         Object.entries(assertionDataForServer).forEach(([key, value]) => {
-            var element = document.createElement("input"); 
+            var element = document.createElement("input");
             element.value=value;
             element.name=key;
             element.type="hidden";
-            form.appendChild(element);  
+            form.appendChild(element);
         });
 
         document.body.appendChild(form);
-    
+
         form.submit();
     }
 
