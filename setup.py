@@ -19,7 +19,7 @@ setup(
     keywords="django",
     zip_safe=False,
     include_package_data=True,
-    install_requires=["py-webauthn-temporary-package"],
+    install_requires=["webauthn"],
     packages=find_packages(),
     python_requires=">=3.6",
 )
