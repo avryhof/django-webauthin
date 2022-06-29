@@ -142,6 +142,10 @@
         .join("");
     }
 
+    function urlsafe_b64decode(s) {
+        return atob(s.replace(/\-/g, '+').replace(/_/g, '/'));
+    }
+
     async function fetch_json(url, options) {
         const response = await fetch(url, options);
         const body = await response.json();
@@ -167,12 +171,11 @@
         let {challenge, allowCredentials} = credentialRequestOptionsFromServer;
 
         challenge = Uint8Array.from(
-        atob(challenge), c => c.charCodeAt(0));
+        urlsafe_b64decode(challenge), c => c.charCodeAt(0));
 
         allowCredentials = allowCredentials.map(credentialDescriptor => {
             let {id} = credentialDescriptor;
-            id = id.replace(/\_/g, "/").replace(/\-/g, "+");
-            id = Uint8Array.from(atob(id), c => c.charCodeAt(0));
+            id = Uint8Array.from(urlsafe_b64decode(id), c => c.charCodeAt(0));
             return Object.assign({}, credentialDescriptor, {id});
         });
 

@@ -1,34 +1,40 @@
-import base64
-import random
-import string
+from base64 import b64decode, b64encode
 
-import webauthn
 from django.contrib import messages
 from django.contrib.auth import authenticate
 from django.contrib.auth import get_user_model
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.sites.shortcuts import get_current_site
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 
+from pydantic.error_wrappers import ValidationError
+
+from webauthn import (
+    generate_authentication_options,
+    generate_registration_options,
+    options_to_json,
+    verify_registration_response,
+)
+from webauthn.helpers import generate_challenge
+from webauthn.helpers.exceptions import InvalidRegistrationResponse
+from webauthn.helpers.structs import (
+    AttestationConveyancePreference,
+    AuthenticationCredential,
+    AuthenticatorSelectionCriteria,
+    RegistrationCredential,
+    ResidentKeyRequirement,
+    UserVerificationRequirement,
+)
+
 from . import settings as wa_settings
 from .models import AuthData
 
-ICON = "https://example.com/"
 
 User = get_user_model()
-
-
-def get_challenge() -> str:
-    return "".join(
-        [
-            random.SystemRandom().choice(string.ascii_letters + string.digits)
-            for i in range(32)
-        ]
-    )
 
 
 def login_view(request):
@@ -39,50 +45,56 @@ def login_view(request):
 @login_required
 def register_begin(request):
     site = get_current_site(request)
-    challenge = get_challenge()
-    request.session["challenge"] = challenge
-    reg_data = webauthn.WebAuthnMakeCredentialOptions(
-        challenge=challenge,
+    hostname = site.domain.split(":")[0]
+    challenge = generate_challenge()
+    request.session["challenge"] = b64encode(challenge).decode()
+    registration_options = generate_registration_options(
+        rp_id=hostname,
         rp_name=site.name,
-        rp_id=site.domain,
-        user_id=base64.b64encode(str(request.user.id).encode()).decode(),
-        username=request.user.get_username(),
-        display_name="%s user: %s" % (site.name, request.user.get_username()),
-        icon_url=ICON,
-        attestation="none",
-        user_verification="required",
-    ).registration_dict
-    # This is needed so the key gets stored on the authenticator, I think.
-    reg_data["authenticatorSelection"]["requireResidentKey"] = True
-    return JsonResponse(reg_data)
+        user_id=b64encode(str(request.user.id).encode()).decode(),
+        user_name=request.user.get_username(),
+        user_display_name=f"{site.name} user: {request.user.get_username()}",
+        challenge=challenge,
+        attestation=AttestationConveyancePreference.NONE,
+        authenticator_selection=AuthenticatorSelectionCriteria(
+            resident_key=ResidentKeyRequirement.REQUIRED,
+            user_verification=UserVerificationRequirement.REQUIRED,
+        ),
+    )
+
+    return HttpResponse(options_to_json(registration_options), content_type="application/json")
 
 
 @csrf_exempt
 @login_required
 def register_verify(request):
     site = get_current_site(request)
-    challenge = request.session.get("challenge")
-    if not challenge:
+    hostname = site.domain.split(":")[0]
+    encoded_challenge = request.session.get("challenge")
+    if not encoded_challenge:
         return JsonResponse("No challenge exists in your session.", status=422)
 
-    registration_response = request.POST
-    webauthn_registration_response = webauthn.WebAuthnRegistrationResponse(
-        rp_id=site.domain,
-        origin="https://%s" % site.domain,
-        registration_response=registration_response,
-        challenge=challenge,
-        self_attestation_permitted=True,
-        none_attestation_permitted=True,
-        uv_required=True,
-    )
+    challenge = b64decode(encoded_challenge)
 
     try:
-        webauthn_credential = webauthn_registration_response.verify()
-    except Exception as e:
+        credential = RegistrationCredential.parse_raw(request.POST)
+    except ValidationError:
+        messages.error(request, "Invalid authentication data.")
+        return redirect(wa_settings.LOGIN_ERROR_URL)
+
+    try:
+        registration_verification = verify_registration_response(
+            credential=credential,
+            expected_challenge=challenge,
+            expected_rp_id=hostname,
+            expected_origin=f"https://{site.domain}",
+            require_user_verification=True,
+        )
+    except InvalidRegistrationResponse as e:
         messages.error(request, "Registration failed. Error: {}".format(e))
         return redirect(wa_settings.REGISTRATION_ERROR_URL)
 
-    auth_data = AuthData.objects.filter(credential_id=webauthn_credential.credential_id)
+    auth_data = AuthData.objects.filter(credential_id=registration_verification.credential_id.decode())
     if auth_data.exists():
         messages.error(
             request,
@@ -90,12 +102,10 @@ def register_verify(request):
         )
         return redirect(wa_settings.REGISTRATION_ERROR_URL)
 
-    webauthn_credential.credential_id = str(webauthn_credential.credential_id, "utf-8")
-    webauthn_credential.public_key = str(webauthn_credential.public_key, "utf-8")
     AuthData.objects.create(
         user=request.user,
-        credential_id=webauthn_credential.credential_id,
-        public_key=webauthn_credential.public_key,
+        credential_id=registration_verification.credential_id.decode(),
+        public_key=registration_verification.credential_public_key.decode(),
     )
     messages.success(request, "Your key has been successfully registered.")
     return redirect(wa_settings.REGISTRATION_REDIRECT_URL)
@@ -104,34 +114,32 @@ def register_verify(request):
 @csrf_exempt
 def login_begin(request):
     site = get_current_site(request)
-    challenge = get_challenge()
-    request.session["challenge"] = challenge
-    login_data = {
-        "challenge": request.session["challenge"],
-        "timeout": 60000,
-        "rpId": site.domain,
-        "allowCredentials": [],
-        "userVerification": "required",
-        "extensions": {
-            "txAuthSimple": "FIDO",
-            "txAuthGenericArg": {"contentType": "text/plain", "content": "RklETw=="},
-            "uvi": True,
-        },
-        "status": "ok",
-        "errorMessage": "Error while logging in.",
-    }
+    hostname = site.domain.split(":")[0]
+    challenge = generate_challenge()
+    request.session["challenge"] = b64encode(challenge).decode()
+    authentication_options = generate_authentication_options(
+        rp_id=hostname,
+        challenge=challenge,
+        user_verification=UserVerificationRequirement.REQUIRED,
+    )
 
-    return JsonResponse(login_data)
+    return HttpResponse(options_to_json(authentication_options), content_type="application/json")
 
 
 @csrf_exempt
 def login_verify(request):
-    challenge = request.session.get("challenge")
-    if not challenge:
+    encoded_challenge = request.session.get("challenge")
+    if not encoded_challenge:
         messages.error(request, "No challenge exists for your session.")
         return redirect(wa_settings.LOGIN_ERROR_URL)
 
-    user = authenticate(request, credential_id=request.POST["id"], data=request.POST)
+    try:
+        credential = AuthenticationCredential.parse_raw(request.POST)
+    except ValidationError:
+        messages.error(request, "Invalid authentication data.")
+        return redirect(wa_settings.LOGIN_ERROR_URL)
+
+    user = authenticate(request, credential=credential)
     if user is None:
         messages.error(request, "Your credentials could not be validated.")
         return redirect(wa_settings.LOGIN_ERROR_URL)

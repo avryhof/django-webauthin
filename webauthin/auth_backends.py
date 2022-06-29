@@ -1,12 +1,14 @@
-import base64
+from base64 import b64decode
 
-import webauthn
 from django.contrib.auth import get_user_model
 from django.contrib.sites.shortcuts import get_current_site
 
-from .models import AuthData
+from webauthn import verify_authentication_response
+from webauthn.helpers.exceptions import InvalidAuthenticationResponse
+from webauthn.helpers.structs import AuthenticationCredential
 
-ICON = "https://example.com/"
+
+from .models import AuthData
 
 
 class WebAuthinBackend:
@@ -18,38 +20,33 @@ class WebAuthinBackend:
         except User.DoesNotExist:
             return None
 
-    def authenticate(self, request, credential_id, data=None):
+    def authenticate(self, request, credential: AuthenticationCredential):
         """Authenticate a user given a signed token."""
-        challenge = request.session.get("challenge")
-        if not challenge:
+        encoded_challenge = request.session.get("challenge")
+        if not encoded_challenge:
             return None
 
-        auth_data = AuthData.objects.filter(credential_id=data["id"]).first()
+        challenge = b64decode(encoded_challenge)
+
+        auth_data = AuthData.objects.filter(credential_id=credential.id).first()
         if not auth_data:
             return None
 
         site = get_current_site(request)
-
-        webauthn_user = webauthn.WebAuthnUser(
-            user_id=base64.b64encode(str(auth_data.user.id).encode()).decode(),
-            username=auth_data.user.get_username(),
-            display_name="User",
-            icon_url=ICON,
-            credential_id=auth_data.credential_id,
-            public_key=auth_data.public_key,
-            sign_count=auth_data.sign_count,
-            rp_id=site.domain,
-        )
-
-        webauthn_assertion_response = webauthn.WebAuthnAssertionResponse(
-            webauthn_user, data, challenge, "https://%s" % site.domain, uv_required=True
-        )
+        hostname = site.domain.split(":")[0]
 
         try:
-            sign_count = webauthn_assertion_response.verify()
-        except Exception:
+            authentication_verification = verify_authentication_response(
+                credential=credential,
+                expected_challenge=challenge,
+                expected_rp_id=hostname,
+                expected_origin=f"https://{site.domain}",
+                credential_public_key=auth_data.public_key,
+                credential_current_sign_count=auth_data.sign_count,
+                require_user_verification=True,
+            )
+        except InvalidAuthenticationResponse:
             return None
 
-        # TODO: Validate the sign count here (https://w3c.github.io/webauthn/#signature-counter)
-        auth_data.set_sign_count(sign_count)
+        auth_data.set_sign_count(authentication_verification.new_sign_count)
         return auth_data.user
