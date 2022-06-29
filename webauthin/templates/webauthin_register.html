@@ -141,6 +141,10 @@
         .join("");
     }
 
+    function urlsafe_b64decode(s) {
+        return atob(s.replace(/\-/g, '+').replace(/_/g, '/'));
+    }
+
     async function fetch_json(url, options) {
         const response = await fetch(url, options);
         const body = await response.json();
@@ -219,10 +223,10 @@
     const transformCredentialCreateOptions = (credentialCreateOptionsFromServer) => {
         let {challenge, user} = credentialCreateOptionsFromServer;
         user.id = Uint8Array.from(
-        atob(credentialCreateOptionsFromServer.user.id), c => c.charCodeAt(0));
+        urlsafe_b64decode(credentialCreateOptionsFromServer.user.id), c => c.charCodeAt(0));
 
         challenge = Uint8Array.from(
-        atob(credentialCreateOptionsFromServer.challenge), c => c.charCodeAt(0));
+        urlsafe_b64decode(credentialCreateOptionsFromServer.challenge), c => c.charCodeAt(0));
 
         const transformedCredentialCreateOptions = Object.assign(
         {}, credentialCreateOptionsFromServer,

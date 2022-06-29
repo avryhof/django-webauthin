@@ -1,10 +1,14 @@
 #!/usr/bin/env python
-import sys
 
 from webauthin import __version__
 
-assert sys.version >= "3.6", "Requires Python v2.7 or above."
 from setuptools import setup, find_packages  # noqa
+
+
+def read(filename: str):
+    with open(filename) as file:
+        return file.read()
+
 
 setup(
     name="django-webauthin",
@@ -12,14 +16,17 @@ setup(
     author="Stavros Korokithakis",
     author_email="hi@stavros.io",
     url="https://gitlab.com/stavros/django-webauthin",
-    description="""Passwordless authentication using WebAuthn.""",
-    long_description=open("README.md").read(),
+    description="Passwordless authentication using WebAuthn",
+    long_description=read("README.md"),
     long_description_content_type="text/markdown",
     license="BSD",
     keywords="django",
     zip_safe=False,
     include_package_data=True,
-    install_requires=["webauthn"],
+    install_requires=[
+        "django>=3.2",
+        "webauthn>=1.0.0",
+    ],
     packages=find_packages(),
     python_requires=">=3.6",
 )
