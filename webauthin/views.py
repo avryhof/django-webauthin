@@ -1,5 +1,7 @@
+import logging
 from base64 import b64decode, b64encode
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import authenticate
 from django.contrib.auth import get_user_model
@@ -10,9 +12,7 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
-
 from pydantic.error_wrappers import ValidationError
-
 from webauthn import (
     generate_authentication_options,
     generate_registration_options,
@@ -33,6 +33,7 @@ from webauthn.helpers.structs import (
 from . import settings as wa_settings
 from .models import AuthData
 
+logger = logging.getLogger(__name__)
 
 User = get_user_model()
 
@@ -78,8 +79,10 @@ def register_verify(request):
 
     try:
         credential = RegistrationCredential.parse_raw(request.POST)
-    except ValidationError:
+    except ValidationError as e:
         messages.error(request, "Invalid authentication data.")
+        if settings.DEBUG:
+            logger.debug(f"{e}: {request.POST}")
         return redirect(wa_settings.LOGIN_ERROR_URL)
 
     try:
